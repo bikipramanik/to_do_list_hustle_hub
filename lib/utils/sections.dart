@@ -2,18 +2,7 @@ import 'package:to_do_list_hustle_hub/models/section_model.dart';
 import 'package:to_do_list_hustle_hub/models/task_model.dart';
 
 List<SectionModel> sections = [
-  SectionModel(
-    sectionName: "Star",
-    tasks: List.generate(
-      100,
-      (index) => TaskModel(
-        taskName: "Star Task $index",
-        starred: false,
-        dateTime: DateTime.now(),
-        completed: false,
-      ),
-    ),
-  ),
+  SectionModel(sectionName: "Star"),
   SectionModel(
     sectionName: "MyTask",
     tasks: List.generate(
