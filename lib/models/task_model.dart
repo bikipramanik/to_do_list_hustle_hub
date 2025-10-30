@@ -1,4 +1,9 @@
+import 'package:uuid/uuid.dart';
+
 class TaskModel {
+  static const uuid = Uuid();
+  final String id;
+  final String parentSectionId;
   final String taskName;
   bool starred;
   final DateTime dateTime;
@@ -11,5 +16,6 @@ class TaskModel {
     required this.dateTime,
     this.description,
     required this.completed,
-  });
+    required this.parentSectionId,
+  }) : id = uuid.v4();
 }
