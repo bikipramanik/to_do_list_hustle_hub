@@ -2,10 +2,39 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:to_do_list_hustle_hub/models/section_model.dart';
 import 'package:to_do_list_hustle_hub/models/task_model.dart';
 import 'package:to_do_list_hustle_hub/models/task_state.dart';
-import 'package:to_do_list_hustle_hub/utils/sections_org.dart';
+
 
 class TaskManager extends StateNotifier<TaskState> {
-  TaskManager() : super(TaskState(sections: sectionsOrg));
+  TaskManager() : super(TaskState(sections: []));
+
+  void initializeSections() {
+  final initialSections = [
+    SectionModel(sectionName: "Star"),
+    SectionModel(sectionName: "My Task"),
+    SectionModel(sectionName: "Shopping"),
+    SectionModel(sectionName: "Gym"),
+    SectionModel(sectionName: "Study"),
+    SectionModel(sectionName: "Office"),
+    SectionModel(sectionName: "Home"),
+  ];
+
+  for (final section in initialSections) {
+    if (section.sectionName != "Star") {
+      section.tasks = List.generate(
+        20,
+        (index) => TaskModel(
+          taskName: "${section.sectionName} $index",
+          starred: false,
+          dateTime: DateTime.now(),
+          completed: false,
+          parentSectionId: section.id,
+        ),
+      );
+    }
+  }
+
+  state = state.copyWith(sections: initialSections);
+}
 
   // -- UI related flags --
   void toggleCompletedTask() {
@@ -21,6 +50,7 @@ class TaskManager extends StateNotifier<TaskState> {
       addDescriptionWhileAddingTask: !state.addDescriptionWhileAddingTask,
     );
   }
+
   //change section
   void changeSection(int index) {
     state = state.copyWith(selectedIndex: index);
@@ -72,6 +102,7 @@ class TaskManager extends StateNotifier<TaskState> {
 
   //------On complete task----------
   void markAsComplete(TaskModel task) {
+    print("------------${task.taskName} is mark as completed");
     final parent = state.sections.firstWhere(
       (s) => s.id == task.parentSectionId,
     );
@@ -90,6 +121,8 @@ class TaskManager extends StateNotifier<TaskState> {
 
   //------ mark task as Incompleted--------------
   void markAsInComplete(TaskModel task) {
+    print("!!!!!!!!!!----${task.taskName} is mark as Incompleted");
+
     final parent = state.sections.firstWhere(
       (s) => s.id == task.parentSectionId,
     );
@@ -188,15 +221,25 @@ class TaskManager extends StateNotifier<TaskState> {
     );
   }
 
-  
-
   // ---- Helper Private Methods -----
 
   void _updateSection(SectionModel updatedSection) {
+    print(
+      '--------Updated section: ${updatedSection.sectionName}, '
+      'tasks: ${updatedSection.tasks.length}, '
+      'completed: ${updatedSection.completedTask.length}',
+    );
+
     final newList = [
       for (final section in state.sections)
         section.id == updatedSection.id ? updatedSection : section,
     ];
+    print(
+      '-------Updated section: ${updatedSection.sectionName}, '
+      'tasks: ${updatedSection.tasks.length}, '
+      'completed: ${updatedSection.completedTask.length}',
+    );
+
     state = state.copyWith(sections: newList);
   }
 

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_hustle_hub/models/section_model.dart';
 import 'package:to_do_list_hustle_hub/screens/create_section_screen.dart';
-import 'package:to_do_list_hustle_hub/utils/sections_org.dart';
 
 class HorizontalBarDelegate extends SliverPersistentHeaderDelegate {
   final int selectedIndex;
+  final List<SectionModel> sections;
   final Function(int) onSelectionSelected;
   final Function(int) onSectionDeleted;
   final Function(String) onSectionCreate;
 
   HorizontalBarDelegate({
+    required this.sections,
     required this.onSelectionSelected,
     required this.onSectionDeleted,
     required this.selectedIndex,
@@ -26,10 +28,10 @@ class HorizontalBarDelegate extends SliverPersistentHeaderDelegate {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        itemCount: sectionsOrg.length + 1,
+        itemCount: sections.length + 1,
         itemBuilder: (context, index) {
           final isSelected = selectedIndex == index;
-          if (index < sectionsOrg.length) {
+          if (index < sections.length) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6.0),
               child: InkWell(
@@ -43,7 +45,7 @@ class HorizontalBarDelegate extends SliverPersistentHeaderDelegate {
                         backgroundColor: const Color.fromARGB(255, 40, 40, 40),
                         title: const Text("Delete Section?"),
                         content: Text(
-                          "Are you sure you want to delete ${sectionsOrg[index].sectionName}?",
+                          "Are you sure you want to delete \"${sections[index].sectionName}\"?",
                           style: const TextStyle(color: Colors.white70),
                         ),
                         actions: [
@@ -86,7 +88,7 @@ class HorizontalBarDelegate extends SliverPersistentHeaderDelegate {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    sectionsOrg[index].sectionName,
+                    sections[index].sectionName,
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),

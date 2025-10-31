@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_hustle_hub/models/section_model.dart';
 import 'package:to_do_list_hustle_hub/models/task_model.dart';
 import 'package:to_do_list_hustle_hub/screens/task_detail_screen.dart';
 
 class TaskWidget extends StatefulWidget {
   final TaskModel task;
+  final List<SectionModel> sections;
   final int sectionIndex;
   final Function(TaskModel) addTaskToStar;
   final Function(TaskModel) removeTaskFromStar;
@@ -33,7 +35,7 @@ class TaskWidget extends StatefulWidget {
     required this.deleteTask,
     required this.onEditTaskName,
     required this.onEditDescription,
-    required this.sectionIndex,
+    required this.sectionIndex, required this.sections,
   });
 
   @override
@@ -47,6 +49,7 @@ class _TaskWidgetState extends State<TaskWidget> {
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => TaskDetailScreen(
+            sections: widget.sections,
             task: widget.task,
             selectedSectionIndex: widget.sectionIndex,
             addToStar: widget.addTaskToStar,
@@ -55,7 +58,7 @@ class _TaskWidgetState extends State<TaskWidget> {
             onEditTaskName: widget.onEditTaskName,
             onEditDescription: widget.onEditDescription,
             markAsComplete: widget.taskCompleted,
-            markAsInComplete: widget.taskCompleted,
+            markAsInComplete: widget.taskNotCompleted,
           ),
         ),
       ),
@@ -74,7 +77,9 @@ class _TaskWidgetState extends State<TaskWidget> {
                   widget.taskNotCompleted(widget.task);
                 }
               }),
-              icon: Icon(Icons.circle_outlined),
+              icon: widget.task.completed
+                  ? Icon(Icons.check)
+                  : Icon(Icons.circle_outlined),
             ),
             Text(widget.task.taskName),
             Spacer(),

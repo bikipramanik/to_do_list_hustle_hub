@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_hustle_hub/models/section_model.dart';
 
 import 'package:to_do_list_hustle_hub/models/task_model.dart';
-import 'package:to_do_list_hustle_hub/utils/sections_org.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final int selectedSectionIndex;
+  final List<SectionModel> sections;
   final TaskModel task;
   final Function(TaskModel) addToStar;
   final Function(TaskModel) removeFromStar;
@@ -37,6 +38,7 @@ class TaskDetailScreen extends StatefulWidget {
     required this.onEditDescription,
     required this.markAsComplete,
     required this.markAsInComplete,
+    required this.sections,
   });
 
   @override
@@ -128,7 +130,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             Row(
               children: [
                 Text(
-                  sectionsOrg[widget.selectedSectionIndex].sectionName,
+                  widget.sections[widget.selectedSectionIndex].sectionName,
                   style: TextStyle(
                     color: Colors.lightBlueAccent,
                     fontWeight: FontWeight.bold,
