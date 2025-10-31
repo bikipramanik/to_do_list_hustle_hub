@@ -4,10 +4,24 @@ import 'package:to_do_list_hustle_hub/screens/task_detail_screen.dart';
 
 class TaskWidget extends StatefulWidget {
   final TaskModel task;
+  final int sectionIndex;
   final Function(TaskModel) addTaskToStar;
   final Function(TaskModel) removeTaskFromStar;
   final Function(TaskModel) taskCompleted;
   final Function(TaskModel) taskNotCompleted;
+  final Function(TaskModel, int) deleteTask;
+  final Function({
+    required String newName,
+    required int sectionIndex,
+    required String taskId,
+  })
+  onEditTaskName;
+  final Function({
+    required String description,
+    required int sectionIndex,
+    required String taskId,
+  })
+  onEditDescription;
 
   const TaskWidget({
     super.key,
@@ -16,6 +30,10 @@ class TaskWidget extends StatefulWidget {
     required this.removeTaskFromStar,
     required this.taskCompleted,
     required this.taskNotCompleted,
+    required this.deleteTask,
+    required this.onEditTaskName,
+    required this.onEditDescription,
+    required this.sectionIndex,
   });
 
   @override
@@ -28,8 +46,17 @@ class _TaskWidgetState extends State<TaskWidget> {
     return InkWell(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) =>
-              TaskDetailScreen(task: widget.task, selectedSectionIndex: 1),
+          builder: (context) => TaskDetailScreen(
+            task: widget.task,
+            selectedSectionIndex: widget.sectionIndex,
+            addToStar: widget.addTaskToStar,
+            removeFromStar: widget.removeTaskFromStar,
+            deleteTask: widget.deleteTask,
+            onEditTaskName: widget.onEditTaskName,
+            onEditDescription: widget.onEditDescription,
+            markAsComplete: widget.taskCompleted,
+            markAsInComplete: widget.taskCompleted,
+          ),
         ),
       ),
       child: Container(
@@ -47,9 +74,7 @@ class _TaskWidgetState extends State<TaskWidget> {
                   widget.taskNotCompleted(widget.task);
                 }
               }),
-              icon: widget.task.completed
-                  ? Icon(Icons.circle)
-                  : Icon(Icons.circle_outlined),
+              icon: Icon(Icons.circle_outlined),
             ),
             Text(widget.task.taskName),
             Spacer(),

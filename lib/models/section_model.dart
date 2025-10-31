@@ -1,7 +1,6 @@
 import 'package:to_do_list_hustle_hub/models/task_model.dart';
 import 'package:uuid/uuid.dart';
 
-
 class SectionModel {
   static const uuid = Uuid();
   String sectionName;
@@ -9,8 +8,23 @@ class SectionModel {
   List<TaskModel> tasks;
   List<TaskModel> completedTask;
 
-  SectionModel({required this.sectionName, List<TaskModel>? tasks,List<TaskModel>? completedTask})
-    : id = uuid.v4(),
-      tasks = tasks ?? [],
-      completedTask = completedTask ?? [];
+  SectionModel({
+    required this.sectionName,
+    List<TaskModel>? tasks,
+    List<TaskModel>? completedTask,
+  }) : id = uuid.v4(),
+       tasks = tasks ?? [],
+       completedTask = completedTask ?? [];
+
+  SectionModel copyWith({
+    String? sectionName,
+    List<TaskModel>? tasks,
+    List<TaskModel>? completedTask,
+  }) {
+    return SectionModel(
+      sectionName: sectionName ?? this.sectionName,
+      tasks: tasks ?? this.tasks,
+      completedTask: completedTask ?? this.completedTask,
+    );
+  }
 }

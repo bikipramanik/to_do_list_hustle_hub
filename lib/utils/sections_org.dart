@@ -1,10 +1,10 @@
 import 'package:to_do_list_hustle_hub/models/section_model.dart';
 import 'package:to_do_list_hustle_hub/models/task_model.dart';
 
-List<SectionModel> sections = [];
+List<SectionModel> sectionsOrg = [];
 
 void initializeSection() {
-  sections = [
+  sectionsOrg = [
     SectionModel(sectionName: "Star"),
     SectionModel(sectionName: "My Task"),
     SectionModel(sectionName: "Shopping"),
@@ -14,7 +14,7 @@ void initializeSection() {
     SectionModel(sectionName: "Home"),
   ];
 
-  for (final section in sections) {
+  for (final section in sectionsOrg) {
     if (section.sectionName != "Star") {
       section.tasks = List.generate(
         20,

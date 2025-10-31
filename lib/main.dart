@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:to_do_list_hustle_hub/screens/home_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ProviderScope(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -13,5 +14,3 @@ class MyApp extends StatelessWidget {
     return MaterialApp(darkTheme: ThemeData.dark(), home: HomeScreen());
   }
 }
-
-

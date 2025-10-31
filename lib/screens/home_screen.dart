@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:to_do_list_hustle_hub/models/section_model.dart';
 import 'package:to_do_list_hustle_hub/models/task_model.dart';
-import 'package:to_do_list_hustle_hub/utils/sections.dart';
+import 'package:to_do_list_hustle_hub/providers/task_manager.dart';
+import 'package:to_do_list_hustle_hub/screens/task_detail_screen.dart';
+import 'package:to_do_list_hustle_hub/utils/sections_org.dart';
 import 'package:to_do_list_hustle_hub/widgets/add_task_bottom_sheet.dart';
 import 'package:to_do_list_hustle_hub/widgets/completed_task_widget.dart';
 import 'package:to_do_list_hustle_hub/widgets/horizontal_bar.dart';
 import 'package:to_do_list_hustle_hub/widgets/task_widget.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int selectedIndex = 0;
-
-  bool starWhileAddingTask = false;
-  bool addDescriptionWhileAddingTask = false;
-
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _addTaskDescriptionController.dispose();
@@ -31,118 +29,36 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _addTaskDescriptionController =
       TextEditingController();
 
-  void addToStar(TaskModel task) {
-    setState(() {
-      if (!sections[0].tasks.any((t) => t.id == task.id)) {
-        sections[0].tasks.add(task);
-      }
-    });
-  }
-
-  void removeFromStar(TaskModel task) {
-    setState(() {
-      sections[0].tasks.removeWhere(
-        (t) => t.id == task.id && t.parentSectionId == task.parentSectionId,
-      );
-    });
-  }
-
-  //to delete sections
-  void deleteSection(int index) {
-    //I do not want to delete first two sections :- star & My task
-    if (index < 2) {
-      //showwing snackBarMessage
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Can not be deleted"),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    } else {
-      //others can be deleted
-      setState(() {
-        //changing state for updating the the UI
-        sections.removeAt(index);
-
-        //updating pointer to -1 or this will cause range out of bound
-        if (selectedIndex >= sections.length) {
-          selectedIndex = sections.length - 1;
-        }
-      });
-    }
-  }
-
-  // this function change pointer and state to view the tapped section
-  void changeSection(int index) {
-    setState(() => selectedIndex = index);
-  }
-
-  // adding new section with updating UI, here as a parameter we are accepting the SectionModel for adding the section
-  void addNewSection(SectionModel section) {
-    setState(() {
-      sections.add(section);
-      selectedIndex++;
-    });
-  }
-
-  void addTask(
-    SectionModel section,
-    String taskName,
-    String? taskDescription,
-    bool star,
-  ) {
-    if (taskName.isNotEmpty) {
-      setState(() {
-        section.tasks.add(
-          TaskModel(
-            parentSectionId: section.id,
-            taskName: taskName,
-            starred: star,
-            dateTime: DateTime.now(),
-            completed: false,
-            description: taskDescription,
-          ),
-        );
-      });
-    }
-  }
-
-  void markAsComplete(TaskModel task) {
-    final parentSection = sections.firstWhere(
-      (s) => s.id == task.parentSectionId,
-    );
-    print("Marking as complete ----------- ${task.taskName}");
-    setState(() {
-      if (!parentSection.completedTask.any((t) => t.id == task.id)) {
-        parentSection.completedTask.add(task);
-        parentSection.tasks.removeWhere((t) => t.id == task.id);
-      }
-    });
-  }
-
-  void markAsInComplete(TaskModel task) {
-    final parentSection = sections.firstWhere(
-      (s) => s.id == task.parentSectionId,
-    );
-    print("Marking as incomplete ----------- ${task.taskName}");
-
-    setState(() {
-      parentSection.completedTask.add(task);
-      parentSection.completedTask.removeWhere((t) => t.id == task.id);
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-
     initializeSection();
   }
 
   @override
   Widget build(BuildContext context) {
-    //here creating a local variable for using the current section
-    final selectedSection = sections[selectedIndex];
+    final taskState = ref.watch(taskManagerProvider); //the data
+    final taskManager = ref.watch(taskManagerProvider.notifier); //the logic
+
+    // 🧠 Guard: handle empty section list safely
+    if (taskState.sections.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color.fromARGB(255, 43, 43, 43),
+        body: const Center(
+          child: Text(
+            "No sections yet! Create one to get started.",
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            taskManager.addSection("My Tasks");
+          },
+          child: const Icon(Icons.add),
+        ),
+      );
+    }
+    final selectedSection = taskState.sections[taskState.selectedIndex];
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 43, 43, 43),
@@ -167,15 +83,15 @@ class _HomeScreenState extends State<HomeScreen> {
               //custom delegate with extending the delegate abstract class
               delegate: HorizontalBarDelegate(
                 //to point and show the tapped section
-                onSelectionSelected: changeSection,
+                onSelectionSelected: taskManager.changeSection,
                 //delete a particular section
-                onSectionDeleted: deleteSection,
+                onSectionDeleted: taskManager.deleteSection,
                 //to change the color of selected index of sections
-                selectedIndex: selectedIndex,
+                selectedIndex: taskState.selectedIndex,
                 //to crate a particular section
                 //it returns a String, using that string I amcreating sections with the function addNewSection()
                 onSectionCreate: (sectionName) {
-                  addNewSection(SectionModel(sectionName: sectionName));
+                  taskManager.addSection(sectionName);
                 },
               ),
               pinned: true,
@@ -197,10 +113,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => TaskWidget(
                         task: selectedSection.tasks[index],
-                        addTaskToStar: addToStar,
-                        removeTaskFromStar: removeFromStar,
-                        taskCompleted: markAsComplete,
-                        taskNotCompleted: markAsInComplete,
+                        addTaskToStar: taskManager.addToStar,
+                        removeTaskFromStar: taskManager.removeFromStar,
+                        taskCompleted: taskManager.markAsComplete,
+                        taskNotCompleted: taskManager.markAsInComplete,
+                        deleteTask: (task, i) => taskManager.deleteTask(
+                          task: task,
+                          sectionIndex: taskState.selectedIndex,
+                        ),
+                        onEditTaskName:
+                            ({
+                              required newName,
+                              required sectionIndex,
+                              required taskId,
+                            }) => taskManager.editTaskName(
+                              newName: newName,
+                              sectionIndex: taskState.selectedIndex,
+                              taskId: taskId,
+                            ),
+                        onEditDescription:
+                            ({
+                              required description,
+                              required sectionIndex,
+                              required taskId,
+                            }) => taskManager.editTaskDescription(
+                              taskId: taskId,
+                              sectionIndex: taskState.selectedIndex,
+                              newDescription: description,
+                            ),
+                        sectionIndex: taskState.selectedIndex,
                       ),
 
                       childCount: selectedSection.tasks.length,
@@ -210,27 +151,92 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.only(left: 16, top: 12, bottom: 6),
-                  child: Text(
-                    "Completed >",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                  child: TextButton(
+                    onPressed: () {
+                      ref
+                          .read(taskManagerProvider.notifier)
+                          .toggleCompletedTask();
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          "Completed ",
+                          style: TextStyle(
+                            color: Colors.lightBlueAccent,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        taskState.showCompletedTask
+                            ? Icon(
+                                Icons.arrow_drop_up,
+                                size: 25,
+                                color: Colors.lightBlueAccent,
+                              )
+                            : Icon(
+                                Icons.arrow_drop_down,
+                                size: 25,
+                                color: Colors.lightBlueAccent,
+                              ),
+                      ],
                     ),
                   ),
                 ),
               ),
 
             // --- Completed Task List (only if not empty)
-            if (selectedSection.completedTask.isNotEmpty)
+            if (selectedSection.completedTask.isNotEmpty &&
+                taskState.showCompletedTask)
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => CompletedTaskWidget(
-                    task: selectedSection.completedTask[index],
-                    removeFromComplete: markAsInComplete,
-                  ),
-                  childCount: selectedSection.completedTask.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final completedTask = selectedSection.completedTask[index];
+                  return InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskDetailScreen(
+                          task: completedTask,
+                          selectedSectionIndex: taskState.selectedIndex,
+                          addToStar: taskManager.addToStar,
+                          removeFromStar: taskManager.removeFromStar,
+                          deleteTask: (task, index) => taskManager.deleteTask(
+                            task: task,
+                            sectionIndex: taskState.selectedIndex,
+                          ),
+                          onEditTaskName:
+                              ({
+                                required newName,
+                                required sectionIndex,
+                                required taskId,
+                              }) => taskManager.editTaskName(
+                                newName: newName,
+                                sectionIndex: taskState.selectedIndex,
+                                taskId: taskId,
+                              ),
+                          onEditDescription:
+                              ({
+                                required description,
+                                required sectionIndex,
+                                required taskId,
+                              }) => taskManager.editTaskDescription(
+                                taskId: taskId,
+                                sectionIndex: taskState.selectedIndex,
+                                newDescription: description,
+                              ),
+                          markAsComplete: taskManager.markAsComplete,
+                          markAsInComplete: taskManager.markAsInComplete,
+                        ),
+                      ),
+                    ),
+                    child: Container(
+                      color: Colors.black,
+                      child: CompletedTaskWidget(
+                        task: selectedSection.completedTask[index],
+                        removeFromComplete: taskManager.markAsInComplete,
+                      ),
+                    ),
+                  );
+                }, childCount: selectedSection.completedTask.length),
               ),
           ],
         ),
@@ -245,14 +251,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, setModalState) {
                   return AddTaskBottomSheet(
                     addDescriptionWhileAddingTask:
-                        addDescriptionWhileAddingTask,
+                        taskState.addDescriptionWhileAddingTask,
                     taskNameController: _addTaskNameController,
                     taskDescriptionController: _addTaskDescriptionController,
                     onDescriptionToggle: (value) {
-                      setState(() => addDescriptionWhileAddingTask = value);
+                      taskManager.toggleAddDescriptionWhileAdding;
                     },
                     onSave: (name, description, star) {
-                      addTask(sections[selectedIndex], name, description, star);
+                      taskManager.addTask(
+                        section: taskState.sections[taskState.selectedIndex],
+                        taskName: name,
+                        star: star,
+                      );
                       _addTaskNameController.clear();
                       _addTaskDescriptionController.clear();
                       Navigator.of(context).pop();
